@@ -35,11 +35,11 @@ void setup(void)
 
 void loop(void)
 {
-  HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-//  str_msg.data = hello;
-//  chatter.publish(&str_msg);
-//  nh.spinOnce();
+  str_msg.data = hello;
+  chatter.publish(&str_msg);
+  nh.spinOnce();
 
   HAL_Delay(1000);
 }
