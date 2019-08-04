@@ -8,7 +8,7 @@
 #include <main.h>
 #include <mainpp.h>
 #include <ros.h>
-#include <std_msgs/String.h>
+#include <sensor_msgs/Imu.h>
 #include <stdio.h>
 #include <string.h>
 #include <I2Cdev.h>
@@ -25,8 +25,34 @@ int16_t gx, gy, gz;
 
 char buff[50];
 
-std_msgs::String str_msg;
-ros::Publisher chatter("chatter", &str_msg);
+sensor_msgs::Imu imu_msg;
+ros::Publisher chatter("imu", &imu_msg);
+
+
+
+void ToQuaternion(geometry_msgs::Quaternion* quat, int16_t yaw, int16_t pitch, int16_t roll) // yaw (Z), pitch (Y), roll (X)
+{
+    // Abbreviations for the various angular functions
+    double cy = cos(yaw * 0.5);
+    double sy = sin(yaw * 0.5);
+    double cp = cos(pitch * 0.5);
+    double sp = sin(pitch * 0.5);
+    double cr = cos(roll * 0.5);
+    double sr = sin(roll * 0.5);
+
+    quat->w = cy * cp * cr + sy * sp * sr;
+    quat->x = cy * cp * sr - sy * sp * cr;
+    quat->y = sy * cp * sr + cy * sp * cr;
+    quat->z = sy * cp * cr - cy * sp * sr;
+}
+
+// Only set once
+//imu_msg.linear_acceleration_covariance[0] = -1;
+//imu_msg.orientation_covariance[0] = -1;
+//imu_msg.angular_velocity_covariance[0] = -1;
+//imu_msg._angular_velocity_type.x = 0;
+//imu_msg._angular_velocity_type.y = 0;
+//imu_msg._angular_velocity_type.z = 0;
 
 #ifdef __cplusplus
  extern "C" {
@@ -53,11 +79,16 @@ void loop(void)
 {
   HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
   MPU6050_getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-  sprintf(buff, "%d, %d, %d, %d, %d, %d\n\r", ax, ay, az, gx, gy, gz);
-  str_msg.data = buff;
-  chatter.publish(&str_msg);
-  nh.spinOnce();
+
+  // Updated on every step
+//  imu_msg.linear_acceleration.x = ax;
+//  imu_msg.linear_acceleration.y = ay;
+//  imu_msg.linear_acceleration.z = az;
+//  ToQuaternion(&imu_msg.orientation, gz, gy, gx);
+
+  chatter.publish(&imu_msg);
   HAL_Delay(1000);
+  nh.spinOnce();
 }
 
 #ifdef __cplusplus
